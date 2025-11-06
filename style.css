@@ -7,7 +7,6 @@
     --text-medium: #8892B0;
     --text-dark: #495670;
     --border-color: #233554;
-    --yellow-alert: #FFD700;
     --red-alert: #FF4D4D;
 }
 
@@ -156,14 +155,6 @@ h2 {
     align-items: flex-start;
     gap: 0.75rem;
     transition: all 0.3s ease;
-}
-
-.alert-card.yellow {
-    border-left: 4px solid var(--yellow-alert);
-}
-
-.alert-card.yellow .alert-icon {
-    color: var(--yellow-alert);
 }
 
 .alert-card.red {

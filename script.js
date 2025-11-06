@@ -1,13 +1,10 @@
-// This function will run *after* the HTML page is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
-  // We define all our elements *inside* the listener
   const mainContent = document.getElementById('main-content');
   const startButton = document.getElementById('start-btn');
   const transcriptLog = document.getElementById('transcript-log');
   const alertLog = document.getElementById('alert-log');
 
-  // This is our new, robust check.
   if (!mainContent || !startButton || !transcriptLog || !alertLog) {
     console.error("Fatal Error: HTML elements are missing.");
     document.body.innerHTML = "<h1>Fatal Error: HTML file is out of sync with script.js. Please hard refresh (Cmd+Shift+R).</h1>";
@@ -18,8 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let recognition = null;
   let fullTranscript = '';
   let alertCount = 0;
-
-  const pressureRegex = /(act now|limited time|only one left|don't wait|offer expires|final notice|your account is suspended|immediate payment|must verify|bank details|verify your identity)/i;
 
   function toggleCall() {
     if (isCallActive) {
@@ -90,7 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (finalTranscript) {
       addTranscript(finalTranscript);
       fullTranscript += finalTranscript + ' ';
-      checkTranscriptForPressure(finalTranscript);
+      
+      // THIS IS THE BIG CHANGE:
+      // We no longer check a regex. We send *every* final transcript
+      // to the AI for analysis.
+      analyzeWithAI(fullTranscript);
     }
     if (interimTranscript) {
       updateInterimTranscript(interimTranscript);
@@ -147,34 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     transcriptLog.scrollTop = transcriptLog.scrollHeight;
   }
 
-  function checkTranscriptForPressure(text) {
-    if (pressureRegex.test(text)) {
-      const alertId = `alert-${alertCount++}`;
-      addAlert(alertId, text);
-      analyzeWithAI(fullTranscript, alertId);
-    }
-  }
-
-  function addAlert(id, text) {
-    const alertCard = document.createElement('div');
-    alertCard.id = id;
-    alertCard.className = 'alert-card yellow';
-    
-    alertCard.innerHTML = `
-      <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.374c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-      </svg>
-      <div class="alert-content">
-        <p><strong>Caution: High-Pressure Language Detected</strong></p>
-        <p>Detected phrase: "${text}"</p>
-        <p><i>Analyzing context...</i></p>
-      </div>
-    `;
-    
-    alertLog.prepend(alertCard);
-  }
-
-  async function analyzeWithAI(transcript, alertId) {
+  async function analyzeWithAI(transcript) {
     try {
       const response = await fetch('/api/analyzePressure', {
         method: 'POST',
@@ -189,42 +161,38 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      updateAlert(alertId, data);
+      
+      // If the AI confirms manipulation, add a new alert.
+      // If not, it does nothing.
+      if (data.is_manipulative) {
+        addAlert(data);
+      }
 
     } catch (error) {
       console.error("Error calling AI:", error);
-      updateAlert(alertId, { error: "Could not analyze context." });
+      // We could add a system error here if needed
     }
   }
-
-  function updateAlert(alertId, aiResponse) {
-    const alertCard = document.getElementById(alertId);
-    if (!alertCard) return;
-
-    if (aiResponse.is_manipulative) {
-      alertCard.classList.remove('yellow');
-      alertCard.classList.add('red');
-      
-      alertCard.innerHTML = `
-        <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.374c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-        </svg>
-        <div class="alert-content">
-          <p><strong>Alert: Manipulative Tactic Confirmed</strong></p>
-          <p>${aiResponse.explanation}</p>
-          <p><strong>Suggested:</strong> "${aiResponse.suggested_response}"</p>
-        </div>
-      `;
-    } else if (aiResponse.is_manipulative === false) {
-      alertCard.remove();
-    } else if (aiResponse.error) {
-      const contextElement = alertCard.querySelector('i');
-      if(contextElement) {
-        contextElement.textContent = `AI Error: ${aiResponse.error}`;
-      }
-    }
+  
+  function addAlert(aiResponse) {
+    const alertId = `alert-${alertCount++}`;
+    const alertCard = document.createElement('div');
+    alertCard.id = alertId;
+    alertCard.className = 'alert-card red';
+    
+    alertCard.innerHTML = `
+      <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.374c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+      </svg>
+      <div class="alert-content">
+        <p><strong>Alert: Manipulative Tactic Detected</strong></p>
+        <p>${aiResponse.explanation}</p>
+        <p><strong>Suggested:</strong> "${aiResponse.suggested_response}"</p>
+      </div>
+    `;
+    
+    alertLog.prepend(alertCard);
   }
 
-  // This line is now safe and will not error.
   startButton.addEventListener('click', toggleCall);
 });
