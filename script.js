@@ -1,6 +1,5 @@
+const mainContent = document.getElementById('main-content');
 const startButton = document.getElementById('start-btn');
-const controls = document.getElementById('controls');
-const container = document.getElementById('container');
 const transcriptLog = document.getElementById('transcript-log');
 const alertLog = document.getElementById('alert-log');
 
@@ -42,7 +41,7 @@ function startCall() {
     transcriptLog.innerHTML = '';
     alertLog.innerHTML = '';
     
-    container.classList.add('visible');
+    mainContent.classList.add('call-active');
     startButton.textContent = 'Stop Call Analysis';
     startButton.classList.add('stop');
     
@@ -60,7 +59,7 @@ function stopCall() {
     recognition.stop();
   }
   isCallActive = false;
-  container.classList.remove('visible');
+  mainContent.classList.remove('call-active');
   startButton.textContent = 'Start Call Analysis';
   startButton.classList.remove('stop');
 }

@@ -97,9 +97,17 @@ button.stop:hover {
     gap: 2rem;
 }
 
-.container.visible {
+/* This is the new logic */
+.main-content.call-active .controls {
+    display: none;
+}
+
+.main-content.call-active .container {
     display: grid;
 }
+
+/* End of new logic */
+
 
 .log-box {
     background-color: var(--bg-light-blue);
