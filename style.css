@@ -115,6 +115,15 @@ body {
     font-style: italic;
 }
 
+.log-entry.transcript {
+    color: var(--text-primary);
+}
+
+.log-entry.error {
+    color: var(--color-red);
+    font-weight: 500;
+}
+
 .alert-card {
     border-radius: 0.5rem;
     padding: 1rem;
