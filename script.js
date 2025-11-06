@@ -46,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
-        let errorMessage = 'An error occurred. ';
+        let errorMessage;
+
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
             errorMessage = 'Error: Microphone permission was denied. Please allow access and try again.';
         } else if (event.error === 'network') {
@@ -55,10 +56,14 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMessage = 'Error: No audio was detected. Please check your microphone.';
         } else if (event.error === 'aborted') {
             errorMessage = 'Speech recognition was aborted.';
+        } else if (event.error === 'no-speech') {
+            console.warn('Speech recognition: no-speech error. Restarting.');
+            return;
+        } else {
+            errorMessage = `An unexpected error occurred: "${event.error}". Please try again.`;
         }
         
         transcriptLog.innerHTML = `<p class="log-entry system error">${errorMessage}</p>`;
-        
     };
 
     startButton.addEventListener('click', toggleCall);
@@ -113,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addTranscript(text) {
         const firstEntry = transcriptLog.querySelector('.system');
         if (firstEntry) {
-            transcriptLog.removeChild(firstEntry);
+            transcriptLog.innerHTML = '';
         }
 
         const p = document.createElement('p');
@@ -141,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addAlert(type, title, message) {
         const firstEntry = alertsLog.querySelector('.system');
         if (firstEntry) {
-            alertsLog.removeChild(firstEntry);
+            alertsLog.innerHTML = '';
         }
 
         const alertCard = document.createElement('div');
