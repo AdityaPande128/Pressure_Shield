@@ -50,9 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMessage = 'Error: A network error occurred. Please check your connection.';
         }
         transcriptLog.innerHTML = `<p class="log-entry system error">${errorMessage}</p>`;
-        if (isCallActive) {
-            toggleCall();
-        }
     };
 
     startButton.addEventListener('click', toggleCall);
