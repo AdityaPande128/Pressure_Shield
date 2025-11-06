@@ -1,25 +1,19 @@
-document.addEventListener('DOMContentLoaded', () => {
+if (typeof deepgram === 'undefined') {
+    
+    document.body.innerHTML = `<div style="font-family: sans-serif; padding: 2rem; text-align: center; line-height: 1.6;">
+        <h1 style="color: #d9534f;">CRITICAL ERROR: Deepgram SDK failed to load.</h1>
+        <p>This is likely a <strong>network issue</strong> or an <strong>ad blocker</strong>.</p>
+        <p>The file <strong>deepgram.min.js</strong> from <strong>cdn.jsdelivr.net</strong> is being blocked.</p>
+        <hr style="margin: 2rem 0;">
+        <p><strong>Please try the following:</strong></p>
+        <ol style="text-align: left; display: inline-block; margin-top: 1rem;">
+            <li><strong>Disable your Ad Blocker</strong> for this site and retry.</li>
+            <li><strong>Try a different browser</strong> (like Chrome or Firefox).</li>
+            <li>Check your <strong>console (F12) > Network tab</strong> to see why the file is blocked.</li>
+        </ol>
+    </div>`;
 
-    if (typeof deepgram === 'undefined') {
-        console.error("Deepgram SDK failed to load. This is likely a cache issue.");
-        
-        const errorContainer = document.getElementById('call-container');
-        if (errorContainer) {
-            errorContainer.innerHTML = `<p class="log-entry system error">
-                <strong>CRITICAL ERROR: Deepgram SDK failed to load.</strong>
-                <br><br>
-                Your browser is likely using a cached, old version of the HTML file.
-                <br><br>
-                <strong>Please perform a "Hard Refresh":</strong>
-                <br>
-                - Windows/Linux: <strong>Ctrl+Shift+R</strong>
-                <br>
-                - Mac: <strong>Cmd+Shift+R</strong>
-            </p>`;
-            errorContainer.style.display = 'grid';
-        }
-        return; 
-    }
+} else {
 
     const { createClient } = deepgram;
 
@@ -35,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.addEventListener('click', toggleCall);
 
     function toggleCall() {
-        isCallActive = !isCallTrue;
+        isCallActive = !isCallActive;
 
         if (isCallActive) {
             startButton.textContent = 'Stop Call Analysis';
@@ -135,6 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
         transcriptLog.scrollTop = transcriptLog.scrollHeight;
     }
 
-    const DEEPGRAM_API_KEY = '756be4e40c6d692d4ffe8a8df614d945c94d5458';
+    const DEEPGRAM_API_KEY = '950ff3a33cce6db0de635647d407cd56fe75853c';
 
-});
+}
