@@ -4,10 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const startButton = document.getElementById('start-btn');
   const transcriptLog = document.getElementById('transcript-log');
   const alertLog = document.getElementById('alert-log');
-  // NEW ELEMENT
-  const summaryLog = document.getElementById('summary-log');
+  const summaryTimeline = document.getElementById('summary-timeline');
 
-  if (!mainContent || !startButton || !transcriptLog || !alertLog || !summaryLog) {
+  if (!mainContent || !startButton || !transcriptLog || !alertLog || !summaryTimeline) {
     console.error("Fatal Error: HTML elements are missing.");
     document.body.innerHTML = "<h1>Fatal Error: HTML file is out of sync with script.js. Please hard refresh (Cmd+Shift+R).</h1>";
     return;
@@ -15,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let isCallActive = false;
   let recognition = null;
-  let fullTranscript = '';
   let shownAlerts = new Set();
+  let systemMessageElement = null;
 
   function toggleCall() {
     if (isCallActive) {
@@ -30,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        addSystemEntry("Error: Speech recognition not supported by this browser.");
+        addSystemEntry("Error: Speech recognition not supported by this browser.", transcriptLog);
         return;
       }
 
@@ -44,19 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
       recognition.onend = handleRecognitionEnd;
 
       isCallActive = true;
-      fullTranscript = '';
       shownAlerts.clear();
       transcriptLog.innerHTML = '';
       alertLog.innerHTML = '';
-      // NEW: Reset summary box
-      summaryLog.innerHTML = '<p class="log-entry system">Waiting for conversation...</p>';
+      summaryTimeline.innerHTML = '';
       
       mainContent.classList.add('call-active');
       startButton.textContent = 'Stop Call Analysis';
       startButton.classList.add('stop');
       
       addSystemEntry("Connected. Start speaking...", transcriptLog);
-      recognition.start();
+      systemMessageElement = addSystemEntry("Waiting for conversation...", summaryTimeline);
 
     } catch (error) {
       console.error("Error starting call:", error);
@@ -88,8 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (finalTranscript) {
       addTranscript(finalTranscript);
-      fullTranscript += finalTranscript + ' ';
-      analyzeWithAI(fullTranscript);
+      analyzeWithAI(finalTranscript); // We send just the new chunk
     }
     if (interimTranscript) {
       updateInterimTranscript(interimTranscript);
@@ -112,15 +108,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function addSystemEntry(text, logElement) {
+    // Clear any existing "system" message
     const existingSystemEntry = logElement.querySelector('.system');
     if (existingSystemEntry && !existingSystemEntry.classList.contains('interim')) {
       existingSystemEntry.remove();
     }
+    
     const entry = document.createElement('p');
     entry.className = 'log-entry system';
     entry.textContent = text;
     logElement.appendChild(entry);
     logElement.scrollTop = logElement.scrollHeight;
+    return entry; // Return the element so we can remove it
   }
 
   function addTranscript(text) {
@@ -146,12 +145,17 @@ document.addEventListener('DOMContentLoaded', () => {
     transcriptLog.scrollTop = transcriptLog.scrollHeight;
   }
 
-  async function analyzeWithAI(transcript) {
+  async function analyzeWithAI(newChunk) {
+    if (systemMessageElement) {
+      systemMessageElement.remove();
+      systemMessageElement = null;
+    }
+  
     try {
       const response = await fetch('/api/analyzePressure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript: transcript }),
+        body: JSON.stringify({ newChunk: newChunk }),
       });
 
       if (!response.ok) {
@@ -160,13 +164,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await response.json();
       
-      // NEW: Update the summary
-      if (data.summary) {
-        // We *replace* the content of the summary log
-        summaryLog.innerHTML = `<p class="log-entry transcript">${data.summary}</p>`;
-        summaryLog.scrollTop = summaryLog.scrollHeight;
+      // NEW: Update the timeline
+      if (data.summaryChunk) {
+        addTimelineEvent(data);
       }
-
+      
+      // This part remains the same
       if (data.alerts && data.alerts.length > 0) {
         for (const alert of data.alerts) {
           const alertKey = `${alert.type}-${alert.title}`;
@@ -180,6 +183,38 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error("Error calling AI:", error);
     }
+  }
+
+  function getHighestAlertLevel(alerts) {
+    if (alerts.some(a => a.type === 'PRESSURE')) {
+      return 'pressure'; // Red
+    }
+    if (alerts.some(a => a.type === 'JARGON')) {
+      return 'jargon'; // Yellow
+    }
+    if (alerts.some(a => a.type === 'MULTI_QUESTION')) {
+      return 'multi_question'; // Green
+    }
+    return 'neutral'; // Neutral
+  }
+
+  function addTimelineEvent(data) {
+    const alertLevel = getHighestAlertLevel(data.alerts);
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    const eventElement = document.createElement('div');
+    eventElement.className = `timeline-event ${alertLevel}`; // e.g., "timeline-event pressure"
+    
+    eventElement.innerHTML = `
+      <div class="timeline-icon"></div>
+      <div class="timeline-content">
+        <div class="timestamp">${timestamp}</div>
+        <p class="summary-text">${data.summaryChunk}</p>
+      </div>
+    `;
+    
+    summaryTimeline.appendChild(eventElement);
+    summaryTimeline.scrollTop = summaryTimeline.scrollHeight;
   }
   
   function addAlert(alert) {

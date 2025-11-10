@@ -3,9 +3,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { transcript } = req.body;
-  if (!transcript) {
-    return res.status(400).json({ error: 'Transcript is required' });
+  const { newChunk } = req.body;
+  if (!newChunk) {
+    return res.status(400).json({ error: 'newChunk is required' });
   }
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -16,14 +16,15 @@ export default async function handler(req, res) {
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
   const systemPrompt = `
-You are 'Clarity', an expert AI assistant specialized in real-time call analysis for cognitive accessibility.
+You are 'Clarity', an expert AI assistant specialized in real-time call analysis.
+Your job is to analyze the user-provided 'newChunk' of a conversation.
 
-Your job is to analyze the provided call transcript and do TWO things:
-1.  **Generate "Clarity Cards" (Alerts):** Identify ANY instances of THREE specific categories:
-    * **PRESSURE/COERCION:** Any language that creates urgency, fear, or manipulation (e.g., "act now," "your account will be locked").
-    * **TECHNICAL JARGON:** Any complex or technical term (e.g., "malware," "router," "SSN").
-    * **MULTI-PART QUESTIONS:** A single sentence asking for two or more distinct pieces of information (e.g., "What is your name and date of birth?").
-2.  **Generate a "Rolling Summary":** Provide a very concise, 1-2 sentence neutral summary of the entire conversation so far.
+You must do TWO things:
+1.  **Analyze for Alerts:** Identify ANY instances of THREE specific categories *within this chunk*:
+    * **PRESSURE:** Language creating urgency, fear, or manipulation.
+    * **JARGON:** Complex or technical terms.
+    * **MULTI_QUESTION:** A single sentence asking two or more questions.
+2.  **Summarize Chunk:** Provide a very concise, 1-sentence summary of *only this chunk*.
 
 You MUST respond with a JSON object that matches this exact schema:
 {
@@ -35,7 +36,7 @@ You MUST respond with a JSON object that matches this exact schema:
       "suggestion": "A short, actionable tip for the user."
     }
   ],
-  "summary": "A 1-2 sentence summary of the conversation."
+  "summaryChunk": "A 1-sentence summary of *only* the new chunk."
 }
 
 - For **PRESSURE**, the title should be "Pressure Tactic Detected".
@@ -43,7 +44,10 @@ You MUST respond with a JSON object that matches this exact schema:
 - For **MULTI_QUESTION**, the title should be "Multi-Part Question".
 
 - If you find *no* issues, return an empty array: { "alerts": [] }
-- The summary must *always* be provided.
+- The summaryChunk must *always* be provided.
+
+**Example Request:**
+{ "newChunk": "This is a final notice, your account will be suspended. What is your name and date of birth?" }
 
 **Example Response:**
 {
@@ -53,9 +57,15 @@ You MUST respond with a JSON object that matches this exact schema:
       "title": "Pressure Tactic Detected",
       "message": "The speaker is using urgency and threatening a negative consequence.",
       "suggestion": "I will not be rushed. I will hang up and verify this myself."
+    },
+    {
+      "type": "MULTI_QUESTION",
+      "title": "Multi-Part Question",
+      "message": "The speaker asked for two pieces of information at once.",
+      "suggestion": "You can ask: 'Can you please ask for that one at a time?'"
     }
   ],
-  "summary": "A 'tech support' agent is claiming the user's account is suspended and is asking them to act now."
+  "summaryChunk": "The speaker gave a 'final notice' and asked for the user's name and date of birth."
 }
   `;
 
@@ -66,7 +76,7 @@ You MUST respond with a JSON object that matches this exact schema:
     contents: [
       {
         role: 'user',
-        parts: [{ text: transcript }],
+        parts: [{ text: newChunk }],
       },
     ],
     generationConfig: {
@@ -87,11 +97,9 @@ You MUST respond with a JSON object that matches this exact schema:
               required: ['type', 'title', 'message', 'suggestion'],
             },
           },
-          // NEW SCHEMA PROPERTY
-          summary: { type: 'STRING' }
+          summaryChunk: { type: 'STRING' }
         },
-        // NEW REQUIRED FIELD
-        required: ['alerts', 'summary'],
+        required: ['alerts', 'summaryChunk'],
       },
       temperature: 0.1,
     },

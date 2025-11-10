@@ -10,6 +10,8 @@
     --red-alert: #FF4D4D;
     --yellow-alert: #FFD700;
     --green-alert: #00FF00;
+    --neutral-dot: #495670;
+    /* New neutral color */
 }
 
 * {
@@ -91,7 +93,6 @@ button.stop:hover {
     background-color: #ff6a6a;
 }
 
-/* UPDATED FOR 3 COLUMNS */
 .container {
     display: none;
     width: 100%;
@@ -107,7 +108,6 @@ button.stop:hover {
     display: grid;
 }
 
-/* This style now applies to all 3 boxes */
 .log-box {
     background-color: var(--bg-light-blue);
     border-radius: 12px;
@@ -116,7 +116,6 @@ button.stop:hover {
     display: flex;
     flex-direction: column;
     max-height: 70vh;
-    /* This makes the *box* have a max height */
 }
 
 h2 {
@@ -125,15 +124,11 @@ h2 {
     color: var(--text-light);
     margin-bottom: 1rem;
     flex-shrink: 0;
-    /* Prevents header from shrinking */
 }
 
-/* This style now applies to all 3 logs */
 .log {
     flex-grow: 1;
-    /* This makes the log fill the space */
     overflow-y: auto;
-    /* This makes the log *itself* scrollable */
     padding-right: 10px;
 }
 
@@ -145,7 +140,6 @@ h2 {
 
 .log-entry.transcript {
     color: var(--text-light);
-    /* We use pre-wrap to respect newlines from the summary */
     white-space: pre-wrap;
 }
 
@@ -157,8 +151,6 @@ h2 {
 .log-entry.system.interim {
     color: var(--text-dark);
 }
-
-/* Removed the specific .summary-box styles, as it's now a .log-box */
 
 .alert-card {
     background-color: var(--bg-dark-blue);
@@ -218,4 +210,66 @@ h2 {
 
 .alert-content p i {
     color: var(--text-dark);
+}
+
+/* NEW TIMELINE STYLES */
+.timeline {
+    position: relative;
+    padding-left: 25px;
+    /* Space for the line and dots */
+}
+
+/* The vertical line */
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background-color: var(--border-color);
+}
+
+.timeline-event {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+/* The icon/dot on the line */
+.timeline-event .timeline-icon {
+    position: absolute;
+    left: -20px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--neutral-dot);
+    /* Default neutral dot */
+    border: 2px solid var(--bg-light-blue);
+}
+
+/* Icon Colors */
+.timeline-event.pressure .timeline-icon {
+    background-color: var(--red-alert);
+}
+
+.timeline-event.jargon .timeline-icon {
+    background-color: var(--yellow-alert);
+}
+
+.timeline-event.multi_question .timeline-icon {
+    background-color: var(--green-alert);
+}
+
+.timeline-content .timestamp {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.timeline-content .summary-text {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin: 0;
 }
