@@ -90,10 +90,11 @@ button.stop:hover {
     background-color: #ff6a6a;
 }
 
+/* UPDATED FOR 3 COLUMNS */
 .container {
     display: none;
     width: 100%;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
 }
 
@@ -105,6 +106,7 @@ button.stop:hover {
     display: grid;
 }
 
+/* This style now applies to all 3 boxes */
 .log-box {
     background-color: var(--bg-light-blue);
     border-radius: 12px;
@@ -113,6 +115,7 @@ button.stop:hover {
     display: flex;
     flex-direction: column;
     max-height: 70vh;
+    /* This makes the *box* have a max height */
 }
 
 h2 {
@@ -120,11 +123,16 @@ h2 {
     font-weight: 600;
     color: var(--text-light);
     margin-bottom: 1rem;
+    flex-shrink: 0;
+    /* Prevents header from shrinking */
 }
 
+/* This style now applies to all 3 logs */
 .log {
     flex-grow: 1;
+    /* This makes the log fill the space */
     overflow-y: auto;
+    /* This makes the log *itself* scrollable */
     padding-right: 10px;
 }
 
@@ -136,6 +144,8 @@ h2 {
 
 .log-entry.transcript {
     color: var(--text-light);
+    /* We use pre-wrap to respect newlines from the summary */
+    white-space: pre-wrap;
 }
 
 .log-entry.system {
@@ -147,28 +157,7 @@ h2 {
     color: var(--text-dark);
 }
 
-/* NEW STYLES FOR SUMMARY BOX */
-.summary-box {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1rem;
-    margin-top: 1rem;
-    flex-shrink: 0;
-}
-
-.summary-box h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-medium);
-    margin-bottom: 0.5rem;
-}
-
-.summary-box p {
-    font-size: 0.9rem;
-    color: var(--text-light);
-    font-style: italic;
-}
-
-/* END NEW STYLES */
+/* Removed the specific .summary-box styles, as it's now a .log-box */
 
 .alert-card {
     background-color: var(--bg-dark-blue);

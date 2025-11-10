@@ -5,9 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const transcriptLog = document.getElementById('transcript-log');
   const alertLog = document.getElementById('alert-log');
   // NEW ELEMENT
-  const summaryContent = document.getElementById('summary-content');
+  const summaryLog = document.getElementById('summary-log');
 
-  if (!mainContent || !startButton || !transcriptLog || !alertLog || !summaryContent) {
+  if (!mainContent || !startButton || !transcriptLog || !alertLog || !summaryLog) {
     console.error("Fatal Error: HTML elements are missing.");
     document.body.innerHTML = "<h1>Fatal Error: HTML file is out of sync with script.js. Please hard refresh (Cmd+Shift+R).</h1>";
     return;
@@ -49,18 +49,18 @@ document.addEventListener('DOMContentLoaded', () => {
       transcriptLog.innerHTML = '';
       alertLog.innerHTML = '';
       // NEW: Reset summary box
-      summaryContent.textContent = "Waiting for conversation to start...";
+      summaryLog.innerHTML = '<p class="log-entry system">Waiting for conversation...</p>';
       
       mainContent.classList.add('call-active');
       startButton.textContent = 'Stop Call Analysis';
       startButton.classList.add('stop');
       
-      addSystemEntry("Connected. Start speaking...");
+      addSystemEntry("Connected. Start speaking...", transcriptLog);
       recognition.start();
 
     } catch (error) {
       console.error("Error starting call:", error);
-      addSystemEntry("Error: Could not start microphone.");
+      addSystemEntry("Error: Could not start microphone.", transcriptLog);
     }
   }
 
@@ -98,10 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleRecognitionError(event) {
     if (event.error === 'no-speech' || event.error === 'audio-capture') {
-      addSystemEntry("Did not catch that. Still listening...");
+      addSystemEntry("Did not catch that. Still listening...", transcriptLog);
     } else {
       console.error("Speech recognition error:", event.error);
-      addSystemEntry(`An unexpected error occurred: '${event.error}'`);
+      addSystemEntry(`An unexpected error occurred: '${event.error}'`, transcriptLog);
     }
   }
 
@@ -111,16 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function addSystemEntry(text) {
-    const existingSystemEntry = transcriptLog.querySelector('.system');
+  function addSystemEntry(text, logElement) {
+    const existingSystemEntry = logElement.querySelector('.system');
     if (existingSystemEntry && !existingSystemEntry.classList.contains('interim')) {
       existingSystemEntry.remove();
     }
     const entry = document.createElement('p');
     entry.className = 'log-entry system';
     entry.textContent = text;
-    transcriptLog.appendChild(entry);
-    transcriptLog.scrollTop = transcriptLog.scrollHeight;
+    logElement.appendChild(entry);
+    logElement.scrollTop = logElement.scrollHeight;
   }
 
   function addTranscript(text) {
@@ -162,7 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // NEW: Update the summary
       if (data.summary) {
-        summaryContent.textContent = data.summary;
+        // We *replace* the content of the summary log
+        summaryLog.innerHTML = `<p class="log-entry transcript">${data.summary}</p>`;
+        summaryLog.scrollTop = summaryLog.scrollHeight;
       }
 
       if (data.alerts && data.alerts.length > 0) {

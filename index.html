@@ -24,24 +24,33 @@
             <button id="start-btn">Start Call Analysis</button>
         </div>
 
+        <!-- NEW 3-COLUMN CONTAINER -->
         <div class="container" id="container">
+
+            <!-- COLUMN 1: FULL TRANSCRIPT -->
             <div class="log-box">
-                <h2>Live Transcript</h2>
+                <h2>Full Transcript</h2>
                 <div class="log" id="transcript-log">
                     <p class="log-entry system">Waiting for call to start...</p>
                 </div>
-                <!-- NEW SUMMARY BOX -->
-                <div class="summary-box">
-                    <h3>Live Summary</h3>
-                    <p id="summary-content">Waiting for conversation to start...</p>
+            </div>
+
+            <!-- COLUMN 2: CALL SUMMARY -->
+            <div class="log-box">
+                <h2>Call Summary</h2>
+                <div class="log" id="summary-log">
+                    <p class="log-entry system">Waiting for conversation...</p>
                 </div>
             </div>
+
+            <!-- COLUMN 3: CLARITY ALERTS -->
             <div class="log-box">
                 <h2>Clarity Alerts</h2>
                 <div class="log" id="alert-log">
                     <p class="log-entry system">Alerts will appear here.</p>
                 </div>
             </div>
+
         </div>
     </div>
 
