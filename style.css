@@ -179,14 +179,20 @@ h2 {
     color: var(--red-alert);
 }
 
-.alert-card.jargon,
-.alert-card.multi_question {
+.alert-card.jargon {
     border-left: 4px solid var(--yellow-alert);
 }
 
-.alert-card.jargon .alert-icon,
-.alert-card.multi_question .alert-icon {
+.alert-card.multi_question {
+    border-left: 4px solid var(--green-alert);
+}
+
+.alert-card.jargon .alert-icon {
     color: var(--yellow-alert);
+}
+
+.alert-card.multi_question .alert-icon {
+    color: var(--green-alert);
 }
 
 .alert-icon {
